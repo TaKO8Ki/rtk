@@ -125,6 +125,31 @@ fn find_no_results_emits_empty() {
 }
 
 #[test]
+fn diff_word_overlapping_change_is_not_reported_identical() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::write(dir.path().join("v1.txt"), "alpha beta\n").expect("write v1");
+    std::fs::write(dir.path().join("v2.txt"), "alpha zzzz\n").expect("write v2");
+
+    let (out, code) = rtk_in_dir(dir.path(), &["diff", "v1.txt", "v2.txt"]);
+
+    assert_eq!(
+        code,
+        Some(1),
+        "differing files must use diff's exit-1 convention"
+    );
+    assert!(
+        !out.contains("identical"),
+        "word-overlapping changes must not be reported identical:\n{out}"
+    );
+    assert!(
+        out.contains("~1 modified"),
+        "modified-only changes must be counted and rendered:\n{out}"
+    );
+    assert!(out.contains("alpha beta"), "old line missing:\n{out}");
+    assert!(out.contains("alpha zzzz"), "new line missing:\n{out}");
+}
+
+#[test]
 fn git_stash_list_no_stashes_emits_empty() {
     let dir = init_git_repo();
     let (out, code) = rtk_in_dir(dir.path(), &["git", "stash", "list"]);

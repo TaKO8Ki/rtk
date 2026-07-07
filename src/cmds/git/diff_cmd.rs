@@ -21,13 +21,15 @@ pub fn run(file1: &Path, file2: &Path, verbose: u8) -> Result<i32> {
 
     let (rtk, exit_code) = render_file_diff(file1, file2, &content1, &content2);
 
-    let shown = never_worse(&raw, &rtk);
-    print!("{}", shown);
+    // `rtk diff FILE1 FILE2` is a verifier: callers need the explicit
+    // differ/identical verdict and diff-convention exit code, even for tiny
+    // files where the rendered summary is larger than raw concatenated input.
+    print!("{}", rtk);
     timer.track(
         &format!("diff {} {}", file1.display(), file2.display()),
         "rtk diff",
         &raw,
-        shown,
+        &rtk,
     );
     Ok(exit_code)
 }
